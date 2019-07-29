@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"ioutil"
+	"io/ioutil"
+	"log"
 
 	"github.com/eatonphil/riscve"
 )
@@ -11,12 +12,12 @@ func main() {
 	pf := flag.String("program", "", "program to run")
 	flag.Parse()
 
-	if pf == "" {
+	if pf == nil || *pf == "" {
 		flag.Usage()
 		return
 	}
 
-	f, err := ioutil.ReadFile(pf)
+	f, err := ioutil.ReadFile(*pf)
 	if err != nil {
 		log.Fatalf("Failed to read program: %s", err.Error())
 	}

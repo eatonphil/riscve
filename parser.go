@@ -9,6 +9,6 @@ type program struct {
 	labels       map[string]int
 }
 
-func Parse(f string) (*program, error) {
-
+func Parse(f []byte) (*program, error) {
+	return nil, nil
 }

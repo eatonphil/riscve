@@ -1,5 +1,5 @@
 package riscve
 
-func Emulate(p program) error {
-
+func Emulate(p *program) error {
+	return nil
 }
