@@ -1,6 +1,6 @@
 # riscve
 
-A A RISC-V user-mode emulator for RV64I written in Go.
+A RISC-V user-mode emulator for RV64I written in Go.
 
 ### Use
 
