@@ -16,3 +16,9 @@ main:
 $ ./dist/main -program ./example/first.s
 (exit)26
 ```
+
+### Tests
+
+```bash
+$ go test .
+```
