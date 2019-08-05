@@ -62,11 +62,20 @@ func TestParse(t *testing.T) {
 			"valid label",
 		},
 		{
-			"basic label and instructions",
+			"basic instruction and label",
 			[]byte("sub x1, x2, x1\nfoo:"),
 			&program{
 				[]instruction{sub},
 				map[string]int{"foo": 1},
+			},
+			"",
+		},
+		{
+			"basic label and instruction",
+			[]byte("foo:\n\tsub x1, x2, x1"),
+			&program{
+				[]instruction{sub},
+				map[string]int{"foo": 0},
 			},
 			"",
 		},

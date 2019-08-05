@@ -217,7 +217,7 @@ type instruction struct {
 }
 
 func (i instruction) rd() register {
-	if i.itype == sType || i.itype == bType || i.itype == pType {
+	if i.itype == sType || i.itype == bType {
 		panic(fmt.Sprintf("Instruction %v accepts no destination register", i.itype))
 	}
 
@@ -235,7 +235,7 @@ func (i instruction) rs(n int) register {
 func (i instruction) imm(arg int) int64 {
 	// TODO: validate imm
 	size := 12
-	im, err := strconv.ParseInt(i.args[arg], 2, size)
+	im, err := strconv.ParseInt(i.args[arg], 10, size)
 	if err != nil {
 		panic(err)
 	}
@@ -244,37 +244,36 @@ func (i instruction) imm(arg int) int64 {
 }
 
 func isNBitInt(i string, n int) bool {
-	_, err := strconv.ParseInt(i, 2, n)
+	_, err := strconv.ParseInt(i, 10, n)
 	return err == nil
 }
 
 func (i instruction) valid() bool {
-	_, arg0IsRegister := registerRepr[i.args[0]]
-	_, arg1IsRegister := registerRepr[i.args[1]]
-	arg2IsRegister := false
-	if len(i.args) == 3 {
-		_, arg2IsRegister = registerRepr[i.args[2]]
+	isReg := []bool{false, false, false}
+	for in := range i.args {
+		_, ok := registerRepr[i.args[in]]
+		isReg[in] = ok
 	}
 
 	switch i.itype {
 	case rType:
-		return arg0IsRegister &&
-			arg1IsRegister &&
-			arg2IsRegister
+		return isReg[0] &&
+			isReg[1] &&
+			isReg[2]
 	case iType:
-		return arg0IsRegister &&
-			arg1IsRegister &&
+		return isReg[0] &&
+			isReg[1] &&
 			isNBitInt(i.args[2], 12)
 	case sType:
 		fallthrough
 	case bType:
 		return isNBitInt(i.args[0], 5) &&
-			arg1IsRegister &&
-			arg2IsRegister
+			isReg[1] &&
+			isReg[2]
 	case uType:
 		fallthrough
 	case jType:
-		return arg0IsRegister &&
+		return isReg[0] &&
 			isNBitInt(i.args[1], 20)
 	case pType:
 		// TODO: validate pseudo-instructions
@@ -670,6 +669,15 @@ var instructions = []instruction{
 	},
 	{
 		"mv",
+		pType,
+		0,
+		0,
+		0,
+		true,
+		nil,
+	},
+	{
+		"li",
 		pType,
 		0,
 		0,

@@ -57,6 +57,7 @@ func Parse(cs []byte) (*program, error) {
 
 				partial = instruction{}
 				partialOpcodeSet = false
+				s = isyntax
 
 				inComment = false
 				row++

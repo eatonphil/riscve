@@ -56,6 +56,9 @@ func (c *cpu) emulateProgram() error {
 			rd := instr.rd()
 			imm := instr.imm(1)
 			c.registers[rd] = imm
+		case "ret":
+			fmt.Printf("(exit)%d\n", c.registers[a0])
+			return nil
 		}
 
 		c.registers[pc]++
@@ -67,13 +70,13 @@ func (c *cpu) emulateProgram() error {
 func initializeCpu() *cpu {
 	c := cpu{}
 
-	rs := map[register]int64{}
+	c.registers = map[register]int64{}
 	for _, r := range registers {
-		rs[r] = 0
+		c.registers[r] = 0
 
 		// Initialize stack pointer
 		if r == sp {
-			rs[r] = int64(len(c.stack))
+			c.registers[r] = int64(len(c.stack))
 		}
 	}
 
