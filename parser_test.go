@@ -20,8 +20,8 @@ func TestParse(t *testing.T) {
 			&program{
 				[]instruction{
 					{
-						&opcodes[opcodeIndex("add")],
-						[]string{"x1", "x2", "x1"},
+						opcodeRepr("add"),
+						[]register{x1, x2, x1},
 					},
 				},
 				map[string]int{},
@@ -32,7 +32,27 @@ func TestParse(t *testing.T) {
 			"no such instruction",
 			[]byte("div x1, x2, x1"),
 			nil,
-			"valid opcode",
+			"valid instruction",
+		},
+		{
+			"register pseudonyms and char cases",
+			[]byte("ADD pc, SP, GP"),
+			&program{
+				[]instruction{
+					{
+						opcodeRepr("add"),
+						[]register{pc, x2, x3},
+					},
+				},
+				map[string]int{},
+			},
+			"",
+		},
+		{
+			"bad register",
+			[]byte("ADD rt"),
+			nil,
+			"valid register",
 		},
 		{
 			"basic label",
@@ -55,8 +75,8 @@ func TestParse(t *testing.T) {
 			&program{
 				[]instruction{
 					{
-						&opcodes[opcodeIndex("sub")],
-						[]string{"x1", "x2", "x1"},
+						opcodeRepr("sub"),
+						[]register{x1, x2, x1},
 					},
 				},
 				map[string]int{"foo": 1},
@@ -68,7 +88,7 @@ func TestParse(t *testing.T) {
 	for _, test := range tests {
 		p, e := Parse(test.input)
 
-		assert.Equal(t, p, test.program, test.name)
+		assert.Equal(t, test.program, p, test.name)
 
 		if e == nil && test.errSubstring != "" {
 			t.Errorf("Expected error like '%s', got nil in '%s'", test.errSubstring, test.name)
