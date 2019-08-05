@@ -2,11 +2,6 @@ package riscve
 
 import "fmt"
 
-type instruction struct {
-	opcode *opcode
-	args   []register
-}
-
 type program struct {
 	instructions []instruction
 	labels       map[string]int
@@ -21,6 +16,7 @@ const (
 
 func Parse(cs []byte) (*program, error) {
 	var partial instruction
+	var partialOpcodeSet bool = false
 	var p program = program{nil, map[string]int{}}
 	var currentToken = ""
 	var col = 0
@@ -38,18 +34,15 @@ func Parse(cs []byte) (*program, error) {
 		whitespace := c == ' ' || c == '\t' || c == ',' || c == '\n'
 		if whitespace {
 			if s == isyntax && currentToken != "" {
-				if partial.opcode == nil {
-					partial.opcode = opcodeRepr(currentToken)
-					if partial.opcode == nil {
+				if !partialOpcodeSet {
+					partialOpcodeSet = true
+					var ok = false
+					partial, ok = instructionRepr(currentToken)
+					if !ok {
 						return nil, fmt.Errorf("Expected valid instruction, got '%s' near %d,%d", currentToken, row, col-len(currentToken))
 					}
 				} else {
-					reg, ok := registerRepr[currentToken]
-					if !ok {
-						return nil, fmt.Errorf("Expected valid register, got '%s' near %d,%d", currentToken, row, col-len(currentToken))
-					}
-
-					partial.args = append(partial.args, reg)
+					partial.args = append(partial.args, currentToken)
 				}
 			} else if s == lsyntax {
 				p.labels[currentToken] = row - 1
@@ -58,10 +51,12 @@ func Parse(cs []byte) (*program, error) {
 			currentToken = ""
 
 			if c == '\n' {
-				if partial.opcode != nil {
+				if partialOpcodeSet {
 					p.instructions = append(p.instructions, partial)
 				}
+
 				partial = instruction{}
+				partialOpcodeSet = false
 
 				inComment = false
 				row++

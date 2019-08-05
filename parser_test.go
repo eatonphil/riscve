@@ -8,6 +8,14 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	add1, _ := instructionRepr("add")
+	add1.args = []string{"x1", "x2", "x1"}
+	add2, _ := instructionRepr("add")
+	add2.args = []string{"pc", "sp", "gp"}
+
+	sub, _ := instructionRepr("sub")
+	sub.args = []string{"x1", "x2", "x1"}
+
 	tests := []struct {
 		name         string
 		input        []byte
@@ -18,12 +26,7 @@ func TestParse(t *testing.T) {
 			"basic instruction",
 			[]byte("add x1, x2, x1"),
 			&program{
-				[]instruction{
-					{
-						opcodeRepr("add"),
-						[]register{x1, x2, x1},
-					},
-				},
+				[]instruction{add1},
 				map[string]int{},
 			},
 			"",
@@ -38,21 +41,10 @@ func TestParse(t *testing.T) {
 			"register pseudonyms and char cases",
 			[]byte("ADD pc, SP, GP"),
 			&program{
-				[]instruction{
-					{
-						opcodeRepr("add"),
-						[]register{pc, x2, x3},
-					},
-				},
+				[]instruction{add2},
 				map[string]int{},
 			},
 			"",
-		},
-		{
-			"bad register",
-			[]byte("ADD rt"),
-			nil,
-			"valid register",
 		},
 		{
 			"basic label",
@@ -73,12 +65,7 @@ func TestParse(t *testing.T) {
 			"basic label and instructions",
 			[]byte("sub x1, x2, x1\nfoo:"),
 			&program{
-				[]instruction{
-					{
-						opcodeRepr("sub"),
-						[]register{x1, x2, x1},
-					},
-				},
+				[]instruction{sub},
 				map[string]int{"foo": 1},
 			},
 			"",
@@ -89,6 +76,12 @@ func TestParse(t *testing.T) {
 		p, e := Parse(test.input)
 
 		assert.Equal(t, test.program, p, test.name)
+
+		if e == nil {
+			for _, i := range p.instructions {
+				assert.True(t, i.valid(), test.name)
+			}
+		}
 
 		if e == nil && test.errSubstring != "" {
 			t.Errorf("Expected error like '%s', got nil in '%s'", test.errSubstring, test.name)

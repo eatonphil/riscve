@@ -28,10 +28,37 @@ func (c *cpu) loadProgram(p *program) error {
 
 func (c *cpu) emulateProgram() error {
 	for _, instr := range c.program.instructions {
-		switch instr.opcode.repr {
-		case "add":
-
+		if !instr.valid() {
+			return fmt.Errorf("Invalid instruction %+v", instr)
 		}
+
+		switch instr.repr {
+		case "add":
+			rd := instr.rd()
+			rs1 := instr.rs(1)
+			rs2 := instr.rs(2)
+			c.registers[rd] = c.registers[rs1] + c.registers[rs2]
+		case "sub":
+			rd := instr.rd()
+			rs1 := instr.rs(1)
+			rs2 := instr.rs(2)
+			c.registers[rd] = c.registers[rs1] - c.registers[rs2]
+		case "addi":
+			rd := instr.rd()
+			rs1 := instr.rs(1)
+			imm := instr.imm(2)
+			c.registers[rd] = c.registers[rs1] + imm
+		case "mv":
+			rd := instr.rd()
+			rs1 := instr.rs(1)
+			c.registers[rd] = c.registers[rs1]
+		case "li":
+			rd := instr.rd()
+			imm := instr.imm(1)
+			c.registers[rd] = imm
+		}
+
+		c.registers[pc]++
 	}
 
 	return nil

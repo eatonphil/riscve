@@ -1,393 +1,11 @@
 package riscve
 
 import (
+	"fmt"
 	"strconv"
 )
 
-type itype int
-
-const (
-	rType itype = iota
-	iType
-	sType
-	bType
-	uType
-	jType
-	pType // pseudo
-)
-
-type opcode struct {
-	repr   string
-	itype  itype
-	opcode int
-	func3  int
-	func7  int
-	psuedo bool
-}
-
-func b(s string) int {
-	i, _ := strconv.ParseInt(s, 2, 64)
-	return int(i)
-}
-
-var opcodes = []opcode{
-	{
-		"lui",
-		uType,
-		b("0110111"),
-		0,
-		0,
-		false,
-	},
-	{
-		"auipc",
-		uType,
-		b("0010111"),
-		0,
-		0,
-		false,
-	},
-	{
-		"jal",
-		jType,
-		b("1101111"),
-		0,
-		0,
-		false,
-	},
-	{
-		"jalr",
-		iType,
-		b("1100111"),
-		0,
-		0,
-		false,
-	},
-	{
-		"beq",
-		bType,
-		b("1100011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"bne",
-		bType,
-		b("1100011"),
-		b("001"),
-		0,
-		false,
-	},
-	{
-		"blt",
-		bType,
-		b("1100011"),
-		b("100"),
-		0,
-		false,
-	},
-	{
-		"bge",
-		bType,
-		b("1100011"),
-		b("101"),
-		0,
-		false,
-	},
-	{
-		"bltu",
-		bType,
-		b("1100011"),
-		b("110"),
-		0,
-		false,
-	},
-	{
-		"bgeu",
-		bType,
-		b("1100011"),
-		b("111"),
-		0,
-		false,
-	},
-	{
-		"lb",
-		iType,
-		b("0000011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"lh",
-		iType,
-		b("0000011"),
-		b("001"),
-		0,
-		false,
-	},
-	{
-		"lw",
-		iType,
-		b("0000011"),
-		b("010"),
-		0,
-		false,
-	},
-	{
-		"lbu",
-		iType,
-		b("0000011"),
-		b("100"),
-		0,
-		false,
-	},
-	{
-		"lhu",
-		iType,
-		b("0000011"),
-		b("101"),
-		0,
-		false,
-	},
-	{
-		"sb",
-		sType,
-		b("0100011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"sh",
-		sType,
-		b("0100011"),
-		b("001"),
-		0,
-		false,
-	},
-	{
-		"sw",
-		sType,
-		b("0100011"),
-		b("010"),
-		0,
-		false,
-	},
-	{
-		"addi",
-		iType,
-		b("0010011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"slti",
-		iType,
-		b("0010011"),
-		b("010"),
-		0,
-		false,
-	},
-	{
-		"sltiu",
-		iType,
-		b("0010011"),
-		b("011"),
-		0,
-		false,
-	},
-	{
-		"xori",
-		iType,
-		b("0010011"),
-		b("100"),
-		0,
-		false,
-	},
-	{
-		"ori",
-		iType,
-		b("0010011"),
-		b("110"),
-		0,
-		false,
-	},
-	{
-		"andi",
-		iType,
-		b("0010011"),
-		b("111"),
-		0,
-		false,
-	},
-	{
-		"slli",
-		rType,
-		b("0010011"),
-		b("001"),
-		0,
-		false,
-	},
-	{
-		"srli",
-		rType,
-		b("0010011"),
-		b("101"),
-		0,
-		false,
-	},
-	{
-		"srai",
-		rType,
-		b("0010011"),
-		b("101"),
-		b("0100000"),
-		false,
-	},
-	{
-		"add",
-		rType,
-		b("0110011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"sub",
-		rType,
-		b("0110011"),
-		0,
-		b("0100000"),
-		false,
-	},
-	{
-		"sll",
-		rType,
-		b("0110011"),
-		b("001"),
-		0,
-		false,
-	},
-	{
-		"slt",
-		rType,
-		b("0110011"),
-		b("010"),
-		0,
-		false,
-	},
-	{
-		"sltu",
-		rType,
-		b("0110011"),
-		b("011"),
-		0,
-		false,
-	},
-	{
-		"xor",
-		rType,
-		b("0110011"),
-		b("100"),
-		0,
-		false,
-	},
-	{
-		"srl",
-		rType,
-		b("0110011"),
-		b("101"),
-		0,
-		false,
-	},
-	{
-		"sra",
-		rType,
-		b("0110011"),
-		b("101"),
-		b("0100000"),
-		false,
-	},
-	{
-		"or",
-		rType,
-		b("0110011"),
-		b("110"),
-		0,
-		false,
-	},
-	{
-		"and",
-		rType,
-		b("0110011"),
-		b("111"),
-		0,
-		false,
-	},
-	{
-		"fence",
-		iType,
-		b("0001111"),
-		0,
-		0,
-		false,
-	},
-	{
-		"ecall",
-		iType,
-		b("1110011"),
-		0,
-		0,
-		false,
-	},
-	{
-		"ebreak",
-		iType,
-		b("1110011"),
-		0,
-		1,
-		false,
-	},
-	{
-		"call",
-		pType,
-		0,
-		0,
-		0,
-		true,
-	},
-	{
-		"ret",
-		pType,
-		0,
-		0,
-		0,
-		true,
-	},
-	{
-		"mv",
-		pType,
-		0,
-		0,
-		0,
-		true,
-	},
-}
-
-func opcodeRepr(repr string) *opcode {
-	for _, oc := range opcodes {
-		if oc.repr == repr {
-			return &oc
-		}
-	}
-
-	return nil
-}
-
-type register int
+type register int64
 
 const (
 	x0 register = iota
@@ -574,4 +192,499 @@ var registerRepr = map[string]register{
 	"t4":   t4,
 	"t5":   t5,
 	"t6":   t6,
+}
+
+type itype int
+
+const (
+	rType itype = iota
+	iType
+	sType
+	bType
+	uType
+	jType
+	pType // pseudo instruction
+)
+
+type instruction struct {
+	repr   string
+	itype  itype
+	opcode int
+	func3  int
+	func7  int
+	psuedo bool
+	args   []string
+}
+
+func (i instruction) rd() register {
+	if i.itype == sType || i.itype == bType || i.itype == pType {
+		panic(fmt.Sprintf("Instruction %v accepts no destination register", i.itype))
+	}
+
+	return registerRepr[i.args[0]]
+}
+
+func (i instruction) rs(n int) register {
+	if n < 1 || n > 2 {
+		panic("Instruction %v accepts two target registers")
+	}
+
+	return registerRepr[i.args[n]]
+}
+
+func (i instruction) imm(arg int) int64 {
+	// TODO: validate imm
+	size := 12
+	im, err := strconv.ParseInt(i.args[arg], 2, size)
+	if err != nil {
+		panic(err)
+	}
+
+	return im
+}
+
+func isNBitInt(i string, n int) bool {
+	_, err := strconv.ParseInt(i, 2, n)
+	return err == nil
+}
+
+func (i instruction) valid() bool {
+	_, arg0IsRegister := registerRepr[i.args[0]]
+	_, arg1IsRegister := registerRepr[i.args[1]]
+	arg2IsRegister := false
+	if len(i.args) == 3 {
+		_, arg2IsRegister = registerRepr[i.args[2]]
+	}
+
+	switch i.itype {
+	case rType:
+		return arg0IsRegister &&
+			arg1IsRegister &&
+			arg2IsRegister
+	case iType:
+		return arg0IsRegister &&
+			arg1IsRegister &&
+			isNBitInt(i.args[2], 12)
+	case sType:
+		fallthrough
+	case bType:
+		return isNBitInt(i.args[0], 5) &&
+			arg1IsRegister &&
+			arg2IsRegister
+	case uType:
+		fallthrough
+	case jType:
+		return arg0IsRegister &&
+			isNBitInt(i.args[1], 20)
+	case pType:
+		// TODO: validate pseudo-instructions
+		return true
+	default:
+		return false
+	}
+}
+
+func b(s string) int {
+	i, _ := strconv.ParseInt(s, 2, 64)
+	return int(i)
+}
+
+var instructions = []instruction{
+	{
+		"lui",
+		uType,
+		b("0110111"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"auipc",
+		uType,
+		b("0010111"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"jal",
+		jType,
+		b("1101111"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"jalr",
+		iType,
+		b("1100111"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"beq",
+		bType,
+		b("1100011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"bne",
+		bType,
+		b("1100011"),
+		b("001"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"blt",
+		bType,
+		b("1100011"),
+		b("100"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"bge",
+		bType,
+		b("1100011"),
+		b("101"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"bltu",
+		bType,
+		b("1100011"),
+		b("110"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"bgeu",
+		bType,
+		b("1100011"),
+		b("111"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"lb",
+		iType,
+		b("0000011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"lh",
+		iType,
+		b("0000011"),
+		b("001"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"lw",
+		iType,
+		b("0000011"),
+		b("010"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"lbu",
+		iType,
+		b("0000011"),
+		b("100"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"lhu",
+		iType,
+		b("0000011"),
+		b("101"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"sb",
+		sType,
+		b("0100011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"sh",
+		sType,
+		b("0100011"),
+		b("001"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"sw",
+		sType,
+		b("0100011"),
+		b("010"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"addi",
+		iType,
+		b("0010011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"slti",
+		iType,
+		b("0010011"),
+		b("010"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"sltiu",
+		iType,
+		b("0010011"),
+		b("011"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"xori",
+		iType,
+		b("0010011"),
+		b("100"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"ori",
+		iType,
+		b("0010011"),
+		b("110"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"andi",
+		iType,
+		b("0010011"),
+		b("111"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"slli",
+		rType,
+		b("0010011"),
+		b("001"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"srli",
+		rType,
+		b("0010011"),
+		b("101"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"srai",
+		rType,
+		b("0010011"),
+		b("101"),
+		b("0100000"),
+		false,
+		nil,
+	},
+	{
+		"add",
+		rType,
+		b("0110011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"sub",
+		rType,
+		b("0110011"),
+		0,
+		b("0100000"),
+		false,
+		nil,
+	},
+	{
+		"sll",
+		rType,
+		b("0110011"),
+		b("001"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"slt",
+		rType,
+		b("0110011"),
+		b("010"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"sltu",
+		rType,
+		b("0110011"),
+		b("011"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"xor",
+		rType,
+		b("0110011"),
+		b("100"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"srl",
+		rType,
+		b("0110011"),
+		b("101"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"sra",
+		rType,
+		b("0110011"),
+		b("101"),
+		b("0100000"),
+		false,
+		nil,
+	},
+	{
+		"or",
+		rType,
+		b("0110011"),
+		b("110"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"and",
+		rType,
+		b("0110011"),
+		b("111"),
+		0,
+		false,
+		nil,
+	},
+	{
+		"fence",
+		iType,
+		b("0001111"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"ecall",
+		iType,
+		b("1110011"),
+		0,
+		0,
+		false,
+		nil,
+	},
+	{
+		"ebreak",
+		iType,
+		b("1110011"),
+		0,
+		1,
+		false,
+		nil,
+	},
+	{
+		"call",
+		pType,
+		0,
+		0,
+		0,
+		true,
+		nil,
+	},
+	{
+		"ret",
+		pType,
+		0,
+		0,
+		0,
+		true,
+		nil,
+	},
+	{
+		"mv",
+		pType,
+		0,
+		0,
+		0,
+		true,
+		nil,
+	},
+}
+
+func instructionRepr(repr string) (instruction, bool) {
+	for _, i := range instructions {
+		if i.repr == repr {
+			return i, true
+		}
+	}
+
+	return instruction{}, false
 }
